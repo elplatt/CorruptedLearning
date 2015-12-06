@@ -117,9 +117,9 @@ var HexSimulation = function (rows, cols) {
     this.rows = rows;
     this.cols = cols;
     this.space = new HexStateSpace(rows, cols);
-    this.draw();
     this.agent = new Agent();
     this.currentState = null;
+    this.draw();
 };
 HexSimulation.prototype = {
     config: {
@@ -143,6 +143,26 @@ HexSimulation.prototype = {
         } else {
             state.override = 0.0;
         }
+        this.draw();
+    },
+    onAgent: function (d) {
+        this.currentState = this.space.getState(d.row, d.col);
+        this.draw();
+    },
+    reset: function () {
+        for (var ri = 0; ri < this.space.rows; ri++) {
+            for (var ci = 0; ci < this.space.cols; ci++) {
+                this.space.getState(ri, ci).estimate = 0.0;
+            }
+        }
+        this.playing = false;
+        this.draw();
+    },
+    clear: function () {
+        this.currentState = null;
+        this.agent = new Agent();
+        this.space = new HexStateSpace(this.rows, this.cols);
+        this.playing = false;
         this.draw();
     },
     update: function () {
@@ -186,7 +206,7 @@ HexSimulation.prototype = {
         var yoff = this.config.cellSize * 0.5;
         var data = this.space.getData();
         var fillScale = d3.scale.linear()
-            .domain([0, 1.0]).range(["#000", "#00ff00"]);
+            .domain([0, 1.0, 2.0]).range(["#000", "#00ff00", "#0000ff"]);
         // Draw states
         var sel = container.selectAll(".state").data(data, function (d) { return d.key; });
         sel.exit().remove();
@@ -201,8 +221,10 @@ HexSimulation.prototype = {
             .on("click", function (d, i) {
                 if (document.getElementById("place").mode.value == "reward") {
                     that.onReward(d);
-                } else {
+                } else if (document.getElementById("place").mode.value == "addictive") {
                     that.onAddictive(d);
+                } else {
+                    that.onAgent(d);
                 }
             });
         cell.append("circle")
@@ -258,4 +280,4 @@ HexSimulation.prototype = {
     }
 };
 
-var sim = new HexSimulation(8, 8);
+var sim = new HexSimulation(6, 6);

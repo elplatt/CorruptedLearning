@@ -9,12 +9,15 @@
             Place:
             <input type="radio" name="mode" value="reward" checked="checked">reward</input>
             <input type="radio" name="mode" value="addictive">addictive reward</input>
+            <input type="radio" name="mode" value="agent">agent</input>
         </form>
     </div>
     <div>
         <button onclick="sim.update();">step</button>
         <button onclick="sim.play(true);">play</button>
         <button onclick="sim.stop();">stop</button>
+        <button onclick="sim.reset();">reset</button>
+        <button onclick="sim.clear();">clear</button>
     </div>
     <svg width="500" height="500" style="background:black;">
     </svg>
