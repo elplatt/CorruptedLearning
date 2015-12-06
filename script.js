@@ -33,7 +33,6 @@ var HexStateSpace = function (rows, cols) {
 };
 HexStateSpace.prototype = {
     getState: function (row, col) {
-        console.log([row, col]);
         if (row < 0) {
             row += Math.ceil(-1 * row / this.rows) * this.rows;
         }
@@ -42,10 +41,11 @@ HexStateSpace.prototype = {
         }
         row = row % this.rows;
         col = col % this.cols;
-        console.log([row, col]);
         return this.states[row][col];
     },
-    getNeighbors: function (row, col) {
+    getNeighbors: function (state) {
+        var row = state.row;
+        var col = state.col;
         left = this.getState(row, col - 1);
         right = this.getState(row, col + 1);
         if (row % 2 == 0) {
@@ -72,11 +72,54 @@ HexStateSpace.prototype = {
     }
 };
 
+var Agent = function (state) {
+    this.state = state;
+};
+Agent.prototype = {
+    config: {
+        "discount": 0.5,
+        "learning": 0.5
+    },
+    setState: function (state) {
+        this.state = state;
+    },
+    update: function (current, neighbors) {
+        var estimate = current.estimate;
+        // Calculate best neighbor
+        var highest = 0.0;
+        var bestNeighbors = [];
+        for (var i = 0; i < neighbors.length; i++) {
+            if (neighbors[i].estimate > highest) {
+                bestNeighbors = [neighbors[i]];
+                highest = neighbors[i].estimate;
+            } else if (neighbors[i].estimate == highest) {
+                bestNeighbors.push(neighbors[i]);
+            }
+        }
+        var nextIndex = Math.floor(Math.random() * bestNeighbors.length);
+        var next = bestNeighbors[nextIndex];
+        // Compare best neighbor to current
+        if (current.estimate + current.value > highest) {
+            next = current;
+        }
+        var error = this.config.discount * (next.value + next.estimate) - estimate;
+        var errorSignal = error;
+        if (next.override > 0.0) {
+            var errorSignal = Math.max(error + next.override, next.override);
+        }
+        var adjustment = this.config.learning * errorSignal;
+        current.estimate += adjustment;
+        return next;
+    }
+};
+
 var HexSimulation = function (rows, cols) {
     this.rows = rows;
     this.cols = cols;
     this.space = new HexStateSpace(rows, cols);
     this.draw();
+    this.agent = new Agent();
+    this.currentState = null;
 };
 HexSimulation.prototype = {
     config: {
@@ -102,6 +145,38 @@ HexSimulation.prototype = {
         }
         this.draw();
     },
+    update: function () {
+        if (this.currentState == null) {
+            var row = Math.floor(Math.random() * this.rows);
+            var col = Math.floor(Math.random() * this.cols);
+            this.currentState = this.space.getState(row, col);
+            this.draw();
+        } else {
+            var lastState = this.currentState;
+            var neighbors = this.space.getNeighbors(this.currentState);
+            this.currentState = this.agent.update(this.currentState, neighbors);
+            this.draw();
+            // If there is no change, reset
+            if (this.currentState == lastState) {
+                this.currentState = null;
+            }
+        }
+    },
+    play: function (set) {
+        var that = this;
+        if (set) {
+            this.playing = true;
+        }
+        this.update();
+        setTimeout(function () {
+            if (that.playing) {
+                that.play();
+            }
+        }, 0);
+    },
+    stop: function () {
+        this.playing = false;
+    },
     draw: function () {
         var that = this;
         var container = d3.select("svg");
@@ -109,10 +184,10 @@ HexSimulation.prototype = {
         var xoff = xspace / 2.0;
         var yspace = this.config.cellSize * 0.75;
         var yoff = this.config.cellSize * 0.5;
-        console.log(this.space);
         var data = this.space.getData();
         var fillScale = d3.scale.linear()
-            .domain([0, 1]).range(["#ccc", "#f73"]);
+            .domain([0, 1.0]).range(["#000", "#00ff00"]);
+        // Draw states
         var sel = container.selectAll(".state").data(data, function (d) { return d.key; });
         sel.exit().remove();
         var cell = sel.enter()
@@ -135,8 +210,7 @@ HexSimulation.prototype = {
             .attr("cx", "0")
             .attr("cy", "0")
             .attr("r", this.config.cellSize * Math.sqrt(3) / 4.0 - 1)            
-            .attr("stroke", "#ccc")
-            .attr("stroke-width", "2");
+            .attr("stroke", "none");
         cell.append("circle")
             .classed("value", true)
             .attr("cx", "0")
@@ -149,7 +223,7 @@ HexSimulation.prototype = {
             .attr("cx", "0")
             .attr("cy", "0")
             .attr("r", this.config.cellSize * Math.sqrt(3) / 12.0)
-            .attr("stroke", "#ff0")
+            .attr("stroke", "#666")
             .attr("stroke-width", "2");
         container.selectAll(".estimate")
             .attr("fill", function (d) { return fillScale(d.estimate); });
@@ -159,11 +233,29 @@ HexSimulation.prototype = {
                 return visibility = d.value > 0.0 ? "visible" : "hidden";
             });
         sel.selectAll(".override")
-            .attr("fill", "#ff0")
+            .attr("fill", "#0000ff")
             .attr("visibility", function (d) {
                 return visibility = d.override > 0.0 ? "visible" : "hidden";
             });
+        // Draw agent
+        if (this.currentState != null) {
+            var agentData = [this.currentState.getDatum()];
+            container.select(".agent").remove();
+            container.selectAll(".agent").data(agentData).enter()
+                .append("g").classed("agent", true)
+                .append("circle")
+                .attr("cx", function (d) {
+                    return (d.col + (d.row % 2) / 2.0) * xspace + xoff;
+                })
+                .attr("cy", function (d) {
+                    return d.row * yspace + yoff; 
+                })
+                .attr("r", this.config.cellSize * Math.sqrt(3) / 4)
+                .attr("fill", "none")
+                .attr("stroke", "#ffffff")
+                .attr("stroke-width", "5");
+        }
     }
 };
 
-var sim = new HexSimulation(2, 2);
+var sim = new HexSimulation(8, 8);
