@@ -88,10 +88,13 @@ Agent.prototype = {
         // Calculate best neighbor
         var highest = 0.0;
         var bestNeighbors = [];
+        //console.log("## updating ##");
         for (var i = 0; i < neighbors.length; i++) {
+            //console.log("  " + neighbors[i].row + ", " + neighbors[i].col + ": " + neighbors[i].estimate);
             if (neighbors[i].estimate > highest) {
                 bestNeighbors = [neighbors[i]];
                 highest = neighbors[i].estimate;
+                //console.log("    best!");
             } else if (neighbors[i].estimate == highest) {
                 bestNeighbors.push(neighbors[i]);
             }
@@ -100,6 +103,7 @@ Agent.prototype = {
         var next = bestNeighbors[nextIndex];
         // Compare best neighbor to current
         if (current.estimate + current.value > highest) {
+            //console.log("  current beats best: " + (current.estimate + current.value));
             next = current;
         }
         var error = this.config.discount * (next.value + next.estimate) - estimate;
@@ -119,11 +123,14 @@ var HexSimulation = function (rows, cols) {
     this.space = new HexStateSpace(rows, cols);
     this.agent = new Agent();
     this.currentState = null;
+    this.stay = 0;
+    this.showGrid = true;
     this.draw();
 };
 HexSimulation.prototype = {
     config: {
-        cellSize: 30
+        cellSize: 30,
+        stayLimit: 1
     },
     onReward: function (d) {
         var state = this.space.getState(d.row, d.col);
@@ -165,6 +172,10 @@ HexSimulation.prototype = {
         this.playing = false;
         this.draw();
     },
+    grid: function () {
+        this.showGrid = !this.showGrid;
+        this.draw();
+    },
     update: function () {
         if (this.currentState == null) {
             var row = Math.floor(Math.random() * this.rows);
@@ -178,7 +189,11 @@ HexSimulation.prototype = {
             this.draw();
             // If there is no change, reset
             if (this.currentState == lastState) {
-                this.currentState = null;
+                this.stay += 1;
+                if (this.stay >= this.config.stayLimit) {
+                    this.currentState = null;
+                    this.stay = 0;
+                }
             }
         }
     },
@@ -232,7 +247,8 @@ HexSimulation.prototype = {
             .attr("cx", "0")
             .attr("cy", "0")
             .attr("r", this.config.cellSize * Math.sqrt(3) / 4.0 - 1)            
-            .attr("stroke", "none");
+            .attr("stroke", function () { if (that.showGrid) { return "#666"; } return "none"; })
+            .attr("stroke-width", "2");
         cell.append("circle")
             .classed("value", true)
             .attr("cx", "0")
@@ -248,7 +264,8 @@ HexSimulation.prototype = {
             .attr("stroke", "#666")
             .attr("stroke-width", "2");
         container.selectAll(".estimate")
-            .attr("fill", function (d) { return fillScale(d.estimate); });
+            .attr("fill", function (d) { return fillScale(d.estimate); })
+            .attr("stroke", function () { if (that.showGrid) { return "#666"; } return "none"; })
         sel.selectAll(".value")
             .attr("fill", function (d) { return fillScale(d.value); })
             .attr("visibility", function (d) {
@@ -280,4 +297,4 @@ HexSimulation.prototype = {
     }
 };
 
-var sim = new HexSimulation(6, 6);
+var sim = new HexSimulation(16, 16);
