@@ -14,6 +14,7 @@ State.prototype = {
             "value": this.value,
             "estimate": this.estimate,
             "override": this.override,
+            "key": [this.row, this.col, this.value, this.estimate, this.override].join(":")
         };
     }
 };
@@ -81,16 +82,39 @@ HexSimulation.prototype = {
     config: {
         cellSize: 30
     },
+    onReward: function (d) {
+        var state = this.space.getState(d.row, d.col);
+        if (state.value == 0.0) {
+            state.value = 1.0;
+            state.override = 0.0;
+        } else {
+            state.value = 0.0;
+        }
+        this.draw();
+    },
+    onAddictive: function (d) {
+        var state = this.space.getState(d.row, d.col);
+        if (state.override == 0.0) {
+            state.override = 1.0;
+            state.value = 0.0;
+        } else {
+            state.override = 0.0;
+        }
+        this.draw();
+    },
     draw: function () {
+        var that = this;
         var container = d3.select("svg");
         var xspace = this.config.cellSize * Math.sqrt(3) / 2.0;
         var xoff = xspace / 2.0;
         var yspace = this.config.cellSize * 0.75;
         var yoff = this.config.cellSize * 0.5;
+        console.log(this.space);
         var data = this.space.getData();
         var fillScale = d3.scale.linear()
             .domain([0, 1]).range(["#ccc", "#f73"]);
-        var sel = container.selectAll(".state").data(data);
+        var sel = container.selectAll(".state").data(data, function (d) { return d.key; });
+        sel.exit().remove();
         var cell = sel.enter()
             .append("g")
                 .classed("state", true)
@@ -98,26 +122,48 @@ HexSimulation.prototype = {
                     var dx = (d.col + (d.row % 2) / 2.0) * xspace + xoff;
                     var dy = d.row * yspace + yoff; 
                     return "translate(" + dx + "," + dy + ")";
-                });
+                })
+            .on("click", function (d, i) {
+                if (document.getElementById("place").mode.value == "reward") {
+                    that.onReward(d);
+                } else {
+                    that.onAddictive(d);
+                }
+            });
         cell.append("circle")
             .classed("estimate", true)
             .attr("cx", "0")
             .attr("cy", "0")
             .attr("r", this.config.cellSize * Math.sqrt(3) / 4.0 - 1)            
             .attr("stroke", "#ccc")
-            .attr("stroke-width", "2")
-            .attr("fill", function (d) { return fillScale(d.estimate); });
+            .attr("stroke-width", "2");
         cell.append("circle")
             .classed("value", true)
             .attr("cx", "0")
             .attr("cy", "0")
             .attr("r", this.config.cellSize * Math.sqrt(3) / 12.0)
             .attr("stroke", "#666")
-            .attr("stroke-width", "2")
+            .attr("stroke-width", "2");
+        cell.append("circle")
+            .classed("override", true)
+            .attr("cx", "0")
+            .attr("cy", "0")
+            .attr("r", this.config.cellSize * Math.sqrt(3) / 12.0)
+            .attr("stroke", "#ff0")
+            .attr("stroke-width", "2");
+        container.selectAll(".estimate")
+            .attr("fill", function (d) { return fillScale(d.estimate); });
+        sel.selectAll(".value")
             .attr("fill", function (d) { return fillScale(d.value); })
             .attr("visibility", function (d) {
-                return d.value > 0.0 ? "visible" : "hidden"; });
+                return visibility = d.value > 0.0 ? "visible" : "hidden";
+            });
+        sel.selectAll(".override")
+            .attr("fill", "#ff0")
+            .attr("visibility", function (d) {
+                return visibility = d.override > 0.0 ? "visible" : "hidden";
+            });
     }
 };
 
-new HexSimulation(16, 16);
+var sim = new HexSimulation(2, 2);
