@@ -130,6 +130,7 @@ var HexSimulation = function (rows, cols) {
 HexSimulation.prototype = {
     config: {
         cellSize: 30,
+        border: 5,
         stayLimit: 1
     },
     onReward: function (d) {
@@ -216,12 +217,15 @@ HexSimulation.prototype = {
         var that = this;
         var container = d3.select("svg");
         var xspace = this.config.cellSize * Math.sqrt(3) / 2.0;
-        var xoff = xspace / 2.0;
+        var xoff = xspace / 2.0 + this.config.border;
         var yspace = this.config.cellSize * 0.75;
-        var yoff = this.config.cellSize * 0.5;
+        var yoff = this.config.cellSize * 0.5 + this.config.border;
+        container
+            .attr("height", this.rows * yspace + yspace/3.0 + this.config.border * 2.0)
+            .attr("width", this.cols * xspace + xspace/2.0 + this.config.border * 2.0);
         var data = this.space.getData();
         var fillScale = d3.scale.linear()
-            .domain([0, 1.0, 2.0]).range(["#000", "#00ff00", "#0000ff"]);
+            .domain([0, 1.0, 10.0]).range(["#000", "#00ff00", "#0000ff"]);
         // Draw states
         var sel = container.selectAll(".state").data(data, function (d) { return d.key; });
         sel.exit().remove();
@@ -297,4 +301,4 @@ HexSimulation.prototype = {
     }
 };
 
-var sim = new HexSimulation(16, 16);
+var sim = new HexSimulation(10, 10);
