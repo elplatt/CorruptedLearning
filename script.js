@@ -83,6 +83,9 @@ Agent.prototype = {
     setState: function (state) {
         this.state = state;
     },
+    getMaxEstimate: function () {
+        return (this.config.discount / (1 - this.config.discount));
+    },
     update: function (current, neighbors) {
         var estimate = current.estimate;
         // Calculate best neighbor
@@ -131,7 +134,7 @@ HexSimulation.prototype = {
     config: {
         cellSize: 30,
         border: 5,
-        stayLimit: 1
+        stayLimit: 10
     },
     onReward: function (d) {
         var state = this.space.getState(d.row, d.col);
@@ -224,8 +227,9 @@ HexSimulation.prototype = {
             .attr("height", this.rows * yspace + yspace/3.0 + this.config.border * 2.0)
             .attr("width", this.cols * xspace + xspace/2.0 + this.config.border * 2.0);
         var data = this.space.getData();
+        var maxEst = this.agent.getMaxEstimate();
         var fillScale = d3.scale.linear()
-            .domain([0, 1.0, 10.0]).range(["#000", "#00ff00", "#0000ff"]);
+            .domain([0, maxEst, 2*maxEst]).range(["#000", "#00ff00", "#0000ff"]);
         // Draw states
         var sel = container.selectAll(".state").data(data, function (d) { return d.key; });
         sel.exit().remove();
