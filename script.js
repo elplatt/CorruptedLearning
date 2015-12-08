@@ -128,6 +128,7 @@ var HexSimulation = function (rows, cols) {
     this.currentState = null;
     this.stay = 0;
     this.showGrid = true;
+    this.path = [];
     this.draw();
 };
 HexSimulation.prototype = {
@@ -185,11 +186,13 @@ HexSimulation.prototype = {
             var row = Math.floor(Math.random() * this.rows);
             var col = Math.floor(Math.random() * this.cols);
             this.currentState = this.space.getState(row, col);
+            this.path.push(this.currentState);
             this.draw();
         } else {
             var lastState = this.currentState;
             var neighbors = this.space.getNeighbors(this.currentState);
             this.currentState = this.agent.update(this.currentState, neighbors);
+            this.path.push(this.currentState);
             this.draw();
             // If there is no change, reset
             if (this.currentState == lastState) {
@@ -197,9 +200,17 @@ HexSimulation.prototype = {
                 if (this.stay >= this.config.stayLimit) {
                     this.currentState = null;
                     this.stay = 0;
+                    this.resetPath();
                 }
             }
         }
+    },
+    resetPath: function () {
+        var last = this.path.pop();
+        for (var i = 0; i < this.path.length; i++) {
+            this.path[i].goesTo = last.row * this.cols + last.col;
+        }
+        this.path = [];
     },
     play: function (set) {
         var that = this;
