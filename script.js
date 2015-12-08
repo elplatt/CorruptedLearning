@@ -134,7 +134,7 @@ HexSimulation.prototype = {
     config: {
         cellSize: 30,
         border: 5,
-        stayLimit: 10
+        stayLimit: 1
     },
     onReward: function (d) {
         var state = this.space.getState(d.row, d.col);
@@ -227,7 +227,7 @@ HexSimulation.prototype = {
             .attr("height", this.rows * yspace + yspace/3.0 + this.config.border * 2.0)
             .attr("width", this.cols * xspace + xspace/2.0 + this.config.border * 2.0);
         var data = this.space.getData();
-        var maxEst = this.agent.getMaxEstimate();
+        var maxEst = Math.max(this.agent.getMaxEstimate(), 1.0);
         var fillScale = d3.scale.linear()
             .domain([0, maxEst, 2*maxEst]).range(["#000", "#00ff00", "#0000ff"]);
         // Draw states
