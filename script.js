@@ -333,6 +333,3 @@ HexSimulation.prototype = {
         }
     }
 };
-
-var sim = new HexSimulation("sim1", 10, 10);
-var sim2 = new HexSimulation("sim2", 10, 10);
