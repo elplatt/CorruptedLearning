@@ -118,7 +118,7 @@ Agent.prototype = {
     }
 };
 
-var HexSimulation = function (rows, cols) {
+var HexSimulation = function (elt, rows, cols) {
     this.rows = rows;
     this.cols = cols;
     this.space = new HexStateSpace(rows, cols);
@@ -128,6 +128,7 @@ var HexSimulation = function (rows, cols) {
     this.showGrid = true;
     this.isFast = false;
     this.path = [];
+    this.elt = elt;
     this.draw();
 };
 HexSimulation.prototype = {
@@ -246,7 +247,7 @@ HexSimulation.prototype = {
     },
     draw: function () {
         var that = this;
-        var container = d3.select("svg");
+        var container = d3.select("#" + this.elt);
         var xspace = this.config.cellSize * Math.sqrt(3) / 2.0;
         var xoff = xspace / 2.0 + this.config.border;
         var yspace = this.config.cellSize * 0.75;
@@ -333,4 +334,5 @@ HexSimulation.prototype = {
     }
 };
 
-var sim = new HexSimulation(10, 10);
+var sim = new HexSimulation("sim1", 10, 10);
+var sim2 = new HexSimulation("sim2", 10, 10);

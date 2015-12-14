@@ -21,25 +21,38 @@
         </form>
     </div>
     <div>
-        <button onclick="sim.update();">step</button>
-        <button onclick="sim.play(true);">play</button>
-        <button onclick="sim.stop();">stop</button>
-        <input type="checkbox" onchange="sim.fast();"/> fast
+        <button onclick="sim.update();sim2.update()">step</button>
+        <button onclick="sim.play(true);sim2.play(true);">play</button>
+        <button onclick="sim.stop();sim2.stop();">stop</button>
+        <input type="checkbox" onchange="sim.fast();sim2.fast();"/> fast
     </div>
     <div>
-        <button onclick="sim.grid();">grid</button>
-        <button onclick="sim.reset();">reset</button>
-        <button onclick="sim.clear();">clear</button>
-a    </div>
+        <button onclick="sim.grid();sim2.grid();">grid</button>
+        <button onclick="sim.reset();sim2.reset();">reset</button>
+        <button onclick="sim.clear();sim2.clear()">clear</button>
+    </div>
     <div>
-        <div>
-            Discount: <input type="range" id="discount" step="0.025" value="0.5" min="0.025" max="0.5" onchange="sim.discount(this.value);"/>
-            <br/>
-            Learning: <input type="range" id="learning" step="0.05" value="0.5" min="0.05" max="1.0"/ onchange="sim.learning(this.value);">
+        <div style="display:inline-block;">
+            <div>
+                Discount: <input type="range" id="discount" step="0.025" value="0.5" min="0.025" max="0.5" onchange="sim.discount(this.value);"/>
+                <br/>
+                Learning: <input type="range" id="learning" step="0.05" value="0.5" min="0.05" max="1.0"/ onchange="sim.learning(this.value);">
+            </div>
+            <div>
+                <svg id="sim1" width="500" height="500" style="background:black;">
+                </svg>
+            </div>
         </div>
-        <div>
-            <svg width="500" height="500" style="background:black;">
-            </svg>
+        <div style="display:inline-block;">
+            <div>
+                Discount: <input type="range" id="discount" step="0.025" value="0.5" min="0.025" max="0.5" onchange="sim2.discount(this.value);"/>
+                <br/>
+                Learning: <input type="range" id="learning" step="0.05" value="0.5" min="0.05" max="1.0"/ onchange="sim2.learning(this.value);">
+            </div>
+            <div>
+                <svg id="sim2" width="500" height="500" style="background:black;">
+                </svg>
+            </div>
         </div>
     </div>
     <script type="text/javascript" src="d3.min.js"></script>
