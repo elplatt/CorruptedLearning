@@ -128,6 +128,7 @@ var HexSimulation = function (rows, cols) {
     this.currentState = null;
     this.stay = 0;
     this.showGrid = true;
+    this.isFast = false;
     this.path = [];
     this.draw();
 };
@@ -181,23 +182,33 @@ HexSimulation.prototype = {
         this.showGrid = !this.showGrid;
         this.draw();
     },
+    fast: function () {
+        this.isFast = !this.isFast;
+    },
     update: function () {
         if (this.currentState == null) {
             var row = Math.floor(Math.random() * this.rows);
             var col = Math.floor(Math.random() * this.cols);
             this.currentState = this.space.getState(row, col);
             this.path.push(this.currentState);
-            this.draw();
+            if (!this.isFast) {
+                this.draw();
+            }
         } else {
             var lastState = this.currentState;
             var neighbors = this.space.getNeighbors(this.currentState);
             this.currentState = this.agent.update(this.currentState, neighbors);
             this.path.push(this.currentState);
-            this.draw();
+            if (!this.isFast) {
+                this.draw();
+            }
             // If there is no change, reset
             if (this.currentState == lastState) {
                 this.stay += 1;
                 if (this.stay >= this.config.stayLimit) {
+                    if (this.isFast) {
+                        this.draw();
+                    }
                     this.currentState = null;
                     this.stay = 0;
                     this.resetPath();
@@ -240,7 +251,7 @@ HexSimulation.prototype = {
         var data = this.space.getData();
         var maxEst = Math.max(this.agent.getMaxEstimate(), 1.0);
         var fillScale = d3.scale.linear()
-            .domain([0, maxEst, 2*maxEst]).range(["#000", "#00ff00", "#0000ff"]);
+            .domain([0, maxEst, 2*maxEst]).range(["#000", "#00ff00", "#00ffff"]);
         // Draw states
         var sel = container.selectAll(".state").data(data, function (d) { return d.key; });
         sel.exit().remove();
