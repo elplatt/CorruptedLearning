@@ -24,13 +24,23 @@
         <button onclick="sim.update();">step</button>
         <button onclick="sim.play(true);">play</button>
         <button onclick="sim.stop();">stop</button>
+        <input type="checkbox" onchange="sim.fast();"/> fast
+    </div>
+    <div>
         <button onclick="sim.grid();">grid</button>
         <button onclick="sim.reset();">reset</button>
         <button onclick="sim.clear();">clear</button>
-    </div>
+a    </div>
     <div>
-        <svg width="500" height="500" style="background:black;">
-        </svg>
+        <div>
+            Discount: <input type="range" id="discount" step="0.025" value="0.5" min="0.025" max="0.5" onchange="sim.discount(this.value);"/>
+            <br/>
+            Learning: <input type="range" id="learning" step="0.05" value="0.5" min="0.05" max="1.0"/ onchange="sim.learning(this.value);">
+        </div>
+        <div>
+            <svg width="500" height="500" style="background:black;">
+            </svg>
+        </div>
     </div>
     <script type="text/javascript" src="d3.min.js"></script>
     <script type="text/javascript" src="script.js"></script>

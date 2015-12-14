@@ -74,17 +74,15 @@ HexStateSpace.prototype = {
 
 var Agent = function (state) {
     this.state = state;
+    this.discount = 0.5;
+    this.learning = 0.5;
 };
 Agent.prototype = {
-    config: {
-        "discount": 0.5,
-        "learning": 0.5
-    },
     setState: function (state) {
         this.state = state;
     },
     getMaxEstimate: function () {
-        return (this.config.discount / (1 - this.config.discount));
+        return (this.discount / (1 - this.discount));
     },
     update: function (current, neighbors) {
         var estimate = current.estimate;
@@ -109,12 +107,12 @@ Agent.prototype = {
             //console.log("  current beats best: " + (current.estimate + current.value));
             next = current;
         }
-        var error = this.config.discount * (next.value + next.estimate) - estimate;
+        var error = this.discount * (next.value + next.estimate) - estimate;
         var errorSignal = error;
         if (next.override > 0.0) {
             var errorSignal = Math.max(error + next.override, next.override);
         }
-        var adjustment = this.config.learning * errorSignal;
+        var adjustment = this.learning * errorSignal;
         current.estimate += adjustment;
         return next;
     }
@@ -160,6 +158,14 @@ HexSimulation.prototype = {
     },
     onAgent: function (d) {
         this.currentState = this.space.getState(d.row, d.col);
+        this.draw();
+    },
+    discount: function (value) {
+        this.agent.discount = value;
+        this.draw();
+    },
+    learning: function (value) {
+        this.agent.learning = value;
         this.draw();
     },
     reset: function () {
